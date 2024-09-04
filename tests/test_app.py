@@ -6,8 +6,8 @@ import os
 
 # Add the project root directory to sys.path before importing app
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from app import app, db
-from model import Product
+from app import app
+from model import Product,db
 
 
 class ShoppingCartTestCase(unittest.TestCase):
@@ -24,16 +24,15 @@ class ShoppingCartTestCase(unittest.TestCase):
         self.ctx.pop()
 
     # Mock the commit and query methods for database session
-    @patch('app.db.session.commit')
-    @patch('app.db.session.add')
-    @patch('app.db.session.query')  # Mock query
+    @patch('model.db.session.commit')
+    @patch('model.db.session.add')
+    @patch('model.db.session.query')# Mock query
     def test_subtotal(self, mock_query, mock_add, mock_commit):
         # Create mock products as per the pricing dataset
         mock_product_A = MagicMock(spec=Product)
         mock_product_A.code = 'A'
         mock_product_A.unit_price = 50
-        mock_product_A.special_price = '3 for 140'  # Ensure mock uses '3 for 140'
-
+        mock_product_A.special_price = '3 for 140' 
         mock_product_B = MagicMock(spec=Product)
         mock_product_B.code = 'B'
         mock_product_B.unit_price = 35
@@ -79,9 +78,9 @@ class ShoppingCartTestCase(unittest.TestCase):
         expected_subtotal = 140 + 60 + 35 + 25 + (2 * 12)  # 140 + 95 + 25 + 24 = 284
         self.assertEqual(data['subtotal'], expected_subtotal)
 
-    @patch('app.db.session.commit')
-    @patch('app.db.session.add')
-    @patch('app.db.session.query')
+    @patch('model.db.session.commit')
+    @patch('model.db.session.add')
+    @patch('model.db.session.query')
     def test_get_pricing_table(self, mock_query, mock_add, mock_commit):
         # Mock the query to return a list of Product objects
         mock_product_A = MagicMock(spec=Product)
@@ -118,8 +117,8 @@ class ShoppingCartTestCase(unittest.TestCase):
         self.assertIn('C', products)
         self.assertIn('D', products)
 
-    @patch('app.db.session.commit')
-    @patch('app.db.session.add')
+    @patch('model.db.session.commit')
+    @patch('model.db.session.add')
     def test_add_product(self, mock_add, mock_commit):
         # Add a new product
         response = self.app.put('/api/pricing', json=[
@@ -132,8 +131,8 @@ class ShoppingCartTestCase(unittest.TestCase):
         data = response.get_json()
         self.assertEqual(data['message'], 'Pricing table updated successfully')
 
-    @patch('app.db.session.commit')
-    @patch('app.db.session.query')
+    @patch('model.db.session.commit')
+    @patch('model.db.session.query')
     def test_update_product(self, mock_query, mock_commit):
         # Update the product's unit_price and special_price
         response = self.app.put('/api/pricing', json=[
@@ -154,8 +153,8 @@ class ShoppingCartTestCase(unittest.TestCase):
         data = response.get_json()
         self.assertEqual(data['message'], 'Pricing table updated successfully')
 
-    @patch('app.db.session.commit')
-    @patch('app.db.session.query')
+    @patch('model.db.session.commit')
+    @patch('model.db.session.query')
     def test_partial_update_product(self, mock_query, mock_commit):
         # Update the product's special_price only
         response = self.app.patch('/api/pricing/A', json={"special_price": "3 for 160"})
