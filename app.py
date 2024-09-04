@@ -4,6 +4,7 @@ from config import Config
 from model import db, Product
 import re
 from flask import current_app
+import logging
 
 # Initialize the Flask app
 app = Flask(__name__)
@@ -14,6 +15,11 @@ app.config.from_object(Config)
 # Initialize the database and migration tool
 db.init_app(app)
 migrate = Migrate(app, db)
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)  # This ensures all debug logs are shown
+app.logger.setLevel(logging.DEBUG)
+
 
 # Routes
 
@@ -203,14 +209,15 @@ def _calculate_item_total(unit_price, special_price, quantity):
                 total_special = (quantity // count) * special_price_value
                 # Calculate total for remaining regular price items
                 total_regular = (quantity % count) * unit_price
+                current_app.logger.info(f"Calculating {quantity} items with special price {special_price}: total_special={total_special}, total_regular={total_regular}")
                 return total_special + total_regular
         # If no special price, return total based on unit price
+        current_app.logger.info(f"Calculating {quantity} items with unit price {unit_price}: total={unit_price * quantity}")
         return unit_price * quantity
     except Exception as e:
         # Log errors in the item calculation
-        app.logger.error(f"Error calculating item total: {str(e)}")
+        current_app.logger.error(f"Error calculating item total: {str(e)}")
         return -1  # Return -1 in case of error
-
 
 
 # Run the app in debug mode
