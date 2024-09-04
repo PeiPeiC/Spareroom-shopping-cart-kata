@@ -1,0 +1,27 @@
+## Start PostgreSQL.
+Run your Flask application:
+### Mac OS
+```
+export FLASK_APP=app.py
+```
+### Windows:
+
+```
+set FLASK_APP=app.py
+```
+## set up db
+
+```
+flask db init          # Create migrations directory
+flask db migrate       # Generate the initial migration
+flask db upgrade       # Apply the migration to the database
+```
+
+
+## run application
+python app.py
+
+## run unit test
+python -m unittest discover -s tests
+
+python tests/test_app.py  (a HTML report will be generated)
