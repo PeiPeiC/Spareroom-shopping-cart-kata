@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  app:
+    build: .
+    ports:
+      - "5001:5000"  # Map port 5000 inside the container to 5001 on your host machine
+    environment:
+      - FLASK_ENV=development
+      - SQLALCHEMY_DATABASE_URI=postgresql://username:password@db:5432/dbname
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+    command: python app.py --host=0.0.0.0  # This ensures Flask binds to 0.0.0.0
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dbname
+    ports:
+      - "5433:5432"
