@@ -28,4 +28,5 @@ python tests/test_app.py  (a HTML report will be generated)
 
 
 ## Deployment
+
 pip freeze > requirements.txt

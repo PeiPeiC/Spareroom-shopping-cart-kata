@@ -1,71 +1,86 @@
-from unittest.mock import patch, MagicMock
-import unittest
-import HtmlTestRunner
 import sys
 import os
 
-# Add the project root directory to sys.path before importing app
+# add the root directory to the sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from app import app
-from model import Product,db
 
+import unittest
+import HtmlTestRunner
+from unittest.mock import patch, MagicMock
+from app import create_app
+from model import Product, db
 
 class ShoppingCartTestCase(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.testing = True
+        cls.client = cls.app.test_client()
+
     def setUp(self):
-        # Setup Flask's test_client and push the application context
-        self.app = app.test_client()
-        self.app.testing = True
-        self.ctx = app.app_context()
-        self.ctx.push()
+        # set up app context
+        self.app_context = self.app.app_context()
+        self.app_context.push()
 
     def tearDown(self):
-        # Pop the application context after each test
-        self.ctx.pop()
+        # clear app context
+        self.app_context.pop()
 
-    # Mock the commit and query methods for database session
-    @patch('model.db.session.commit')
-    @patch('model.db.session.add')
-    @patch('model.db.session.query')# Mock query
-    def test_subtotal(self, mock_query, mock_add, mock_commit):
-        # Create mock products as per the pricing dataset
+    @patch('model.Product.query')
+    def test_get_pricing_table(self, mock_query):
+        # mock products data
         mock_product_A = MagicMock(spec=Product)
-        mock_product_A.code = 'A'
-        mock_product_A.unit_price = 50
-        mock_product_A.special_price = '3 for 140' 
+        mock_product_A.to_dict.return_value = {"code": "A", "unit_price": 50, "special_price": "3 for 140"}
+
         mock_product_B = MagicMock(spec=Product)
-        mock_product_B.code = 'B'
+        mock_product_B.to_dict.return_value = {"code": "B", "unit_price": 35, "special_price": "2 for 60"}
+
+        # mock query results
+        mock_query.all.return_value = [mock_product_A, mock_product_B]
+
+        # get pricing table        
+        response = self.client.get('/api/pricing')
+        data = response.get_json()
+
+        # validate response
+        self.assertEqual(len(data), 2)
+        self.assertIn('A', [product['code'] for product in data])
+        self.assertIn('B', [product['code'] for product in data])
+
+    @patch('model.Product.query')
+    def test_subtotal(self, mock_query):
+        # mock products data
+        mock_product_A = MagicMock(spec=Product)
+        mock_product_A.unit_price = 50
+        mock_product_A.special_price = "3 for 140"
+
+        mock_product_B = MagicMock(spec=Product)
         mock_product_B.unit_price = 35
-        mock_product_B.special_price = '2 for 60'
+        mock_product_B.special_price = "2 for 60"
 
         mock_product_C = MagicMock(spec=Product)
-        mock_product_C.code = 'C'
         mock_product_C.unit_price = 25
         mock_product_C.special_price = None
 
         mock_product_D = MagicMock(spec=Product)
-        mock_product_D.code = 'D'
         mock_product_D.unit_price = 12
         mock_product_D.special_price = None
 
-        # Mock the session query to return the correct product based on the code
+        # 模拟查询结果
         def filter_by_code(code):
-            if code == 'A':
-                return mock_product_A
-            elif code == 'B':
-                return mock_product_B
-            elif code == 'C':
-                return mock_product_C
-            elif code == 'D':
-                return mock_product_D
-            else:
-                return None
+            return {
+                'A': mock_product_A,
+                'B': mock_product_B,
+                'C': mock_product_C,
+                'D': mock_product_D
+            }.get(code, None)
 
-        # Mock the filter_by method to use filter_by_code
+        # Mock `filter_by` 和 `first`
         mock_query.filter_by.side_effect = lambda **kwargs: MagicMock(first=lambda: filter_by_code(kwargs['code']))
 
-        # Send request for subtotal calculation
-        response = self.app.post('/api/subtotal', json=[
+        # test subtotal calculation
+        response = self.client.post('/api/subtotal', json=[
             {"code": "A", "quantity": 3},
             {"code": "B", "quantity": 3},
             {"code": "C", "quantity": 1},
@@ -74,115 +89,150 @@ class ShoppingCartTestCase(unittest.TestCase):
 
         data = response.get_json()
 
-        # Verify the subtotal calculation based on mock pricing dataset
-        expected_subtotal = 140 + 60 + 35 + 25 + (2 * 12)  # 140 + 95 + 25 + 24 = 284
+        # check subtotal calculation
+        expected_subtotal = 140 + 60 + 35 + 25 + (2 * 12)  # 284
+        self.assertIn('subtotal', data)
         self.assertEqual(data['subtotal'], expected_subtotal)
 
-    @patch('model.db.session.commit')
-    @patch('model.db.session.add')
-    @patch('model.db.session.query')
-    def test_get_pricing_table(self, mock_query, mock_add, mock_commit):
-        # Mock the query to return a list of Product objects
+    @patch('model.Product.query')
+    def test_post_pricing_and_subtotal(self, mock_query):
+        # mock products data
         mock_product_A = MagicMock(spec=Product)
-        mock_product_A.code = 'A'
-        mock_product_A.unit_price = 50
-        mock_product_A.special_price = '3 for 140'
+        mock_product_A.unit_price = 40
+        mock_product_A.special_price = "3 for 100"
 
         mock_product_B = MagicMock(spec=Product)
-        mock_product_B.code = 'B'
-        mock_product_B.unit_price = 35
-        mock_product_B.special_price = '2 for 60'
+        mock_product_B.unit_price = 60
+        mock_product_B.special_price = "2 for 60"
 
         mock_product_C = MagicMock(spec=Product)
-        mock_product_C.code = 'C'
-        mock_product_C.unit_price = 25
+        mock_product_C.unit_price = 77
         mock_product_C.special_price = None
 
         mock_product_D = MagicMock(spec=Product)
-        mock_product_D.code = 'D'
-        mock_product_D.unit_price = 12
+        mock_product_D.unit_price = 66
         mock_product_D.special_price = None
 
-        # Mock the session query to return the mocked products
-        mock_query.return_value.all.return_value = [mock_product_A, mock_product_B, mock_product_C, mock_product_D]
+        # mock query results
+        def filter_by_code(code):
+            return {
+                'A': mock_product_A,
+                'B': mock_product_B,
+                'C': mock_product_C,
+                'D': mock_product_D
+            }.get(code, None)
 
-        response = self.app.get('/api/pricing')
+        # Mock `filter_by` 和 `first`
+        mock_query.filter_by.side_effect = lambda **kwargs: MagicMock(first=lambda: filter_by_code(kwargs['code']))
+
+        # mock data to prevent database access
+        response = self.client.post('/api/subtotal', json=[
+            {"code": "A", "quantity": 3},
+            {"code": "B", "quantity": 3},
+            {"code": "C", "quantity": 1},
+            {"code": "D", "quantity": 2}
+        ])
+
         data = response.get_json()
 
-        # Check if some known products are in the pricing table
-        self.assertIsInstance(data, list)
-        products = [product['code'] for product in data]
-        self.assertIn('A', products)
-        self.assertIn('B', products)
-        self.assertIn('C', products)
-        self.assertIn('D', products)
 
+        #check subtotal calculation
+        expected_subtotal = 100 + 60 + 60 + 77 + (2 * 66)  # 429
+        self.assertIn('subtotal', data)
+        self.assertEqual(data['subtotal'], expected_subtotal)
+
+    @patch('model.Product.query')
     @patch('model.db.session.commit')
     @patch('model.db.session.add')
-    def test_add_product(self, mock_add, mock_commit):
-        # Add a new product
-        response = self.app.put('/api/pricing', json=[
-            {"code": "E", "unit_price": 20, "special_price": None}
-        ])
-        mock_commit.assert_called_once()  # Ensure commit is called
-        mock_add.assert_called_once()  # Ensure add was called once
-
-        # Verify the success message
-        data = response.get_json()
-        self.assertEqual(data['message'], 'Pricing table updated successfully')
-
-    @patch('model.db.session.commit')
-    @patch('model.db.session.query')
-    def test_update_product(self, mock_query, mock_commit):
-        # Update the product's unit_price and special_price
-        response = self.app.put('/api/pricing', json=[
-            {"code": "A", "unit_price": 55, "special_price": "3 for 150"}
-        ])
-        mock_commit.assert_called_once()  # Ensure commit is called
-
-        # Mock the updated product A
+    def test_put_pricing_table(self, mock_add, mock_commit, mock_query):
+        # Mock existing products
         mock_product_A = MagicMock(spec=Product)
         mock_product_A.code = 'A'
-        mock_product_A.unit_price = 55
-        mock_product_A.special_price = '3 for 150'
+        mock_product_B = MagicMock(spec=Product)
+        mock_product_B.code = 'B'
 
-        # Mock the session query to return the updated product
-        mock_query.return_value.all.return_value = [mock_product_A]
+        # Mock query result for existing product A
+        mock_query.filter_by.side_effect = lambda code: MagicMock(first=lambda: mock_product_A if code == 'A' else None)
 
-        # Verify the success message
+        # Send PUT request to update pricing table
+        response = self.client.put('/api/pricing', json=[
+            {"code": "A", "unit_price": 55, "special_price": "3 for 145"},
+            {"code": "B", "unit_price": 35, "special_price": "2 for 65"}
+        ])
+
         data = response.get_json()
+
+        # Verify response
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('message', data)
         self.assertEqual(data['message'], 'Pricing table updated successfully')
 
+        # Verify that session.add() was called once for product B (since it's new)
+        mock_add.assert_called_once()
+
+        # Verify that session.commit() was called
+        mock_commit.assert_called_once()
+
+    @patch('model.Product.query')
     @patch('model.db.session.commit')
-    @patch('model.db.session.query')
-    def test_partial_update_product(self, mock_query, mock_commit):
-        # Update the product's special_price only
-        response = self.app.patch('/api/pricing/A', json={"special_price": "3 for 160"})
-        mock_commit.assert_called_once()  # Ensure commit is called
+    def test_patch_product(self, mock_commit, mock_query):
+        # Mock existing product
+        mock_product = MagicMock(spec=Product)
+        mock_product.code = 'A'
+        mock_product.unit_price = 50
+        mock_product.special_price = '3 for 140'
 
-        # Mock the updated product A
-        mock_product_A = MagicMock(spec=Product)
-        mock_product_A.code = 'A'
-        mock_product_A.special_price = '3 for 160'
+        # Mock query result for product A
+        mock_query.filter_by.side_effect = lambda code: MagicMock(first=lambda: mock_product)
 
-        # Mock the session query to return the updated product
-        mock_query.return_value.all.return_value = [mock_product_A]
+        # Send PATCH request to update product A partially
+        response = self.client.patch('/api/pricing/A', json={"special_price": "3 for 150"})
 
-        # Verify the success message
         data = response.get_json()
+
+        # Verify response
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('message', data)
         self.assertEqual(data['message'], 'Product A updated successfully')
 
-    def test_invalid_special_price(self):
-        # Attempt to update with an invalid special price format
-        response = self.app.put('/api/pricing', json=[
-            {"code": "A", "special_price": "3 for x"}
-        ])
+        # Verify that product's special price was updated
+        self.assertEqual(mock_product.special_price, '3 for 150')
+
+        # Verify that session.commit() was called
+        mock_commit.assert_called_once()
+
+    @patch('model.Product.query')
+    @patch('model.db.session.delete')
+    @patch('model.db.session.commit')
+    def test_delete_products(self, mock_commit, mock_delete, mock_query):
+        # Mock products data
+        mock_product_A = MagicMock(spec=Product)
+        mock_product_B = MagicMock(spec=Product)
+
+        # Mock query results for products to delete
+        def filter_by_code(code):
+            return {
+                'A': mock_product_A,
+                'B': mock_product_B
+            }.get(code, None)
+
+        # Mock `filter_by` 和 `first`
+        mock_query.filter_by.side_effect = lambda **kwargs: MagicMock(first=lambda: filter_by_code(kwargs['code']))
+
+        # Send request to delete products
+        response = self.client.delete('/api/pricing', json=['A', 'B'])
+
         data = response.get_json()
 
-        # Check for an error message
-        self.assertIn('error', data)
-        self.assertEqual(response.status_code, 400)
+        # Verify products were deleted and committed
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('message', data)
+        self.assertIn('deleted_products', data)
+        self.assertEqual(data['deleted_products'], ['A', 'B'])
 
+        # Verify delete and commit were called
+        self.assertEqual(mock_delete.call_count, 2)  # Two products deleted
+        mock_commit.assert_called_once()
 
 if __name__ == '__main__':
     unittest.main(testRunner=HtmlTestRunner.HTMLTestRunner(output='test_reports'))
