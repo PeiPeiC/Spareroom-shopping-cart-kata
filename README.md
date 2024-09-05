@@ -187,14 +187,9 @@ Alternatively, you can run the app using Docker:
    docker-compose up --build
    ```
 
-2. **Database migration inside Docker**:
-   ```bash
-   docker-compose exec app flask db upgrade
-   ```
+2. **Access the app** at `http://127.0.0.1:5000`.
 
-3. **Access the app** at `http://127.0.0.1:5000`.
-
-4. **API Testing Example (within container)**:
+3. **API Testing Example (within container)**:
 
    To test the `/api/subtotal` endpoint inside Docker:
 

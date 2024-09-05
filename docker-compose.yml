@@ -2,7 +2,7 @@ version: '3'
 
 services:
   app:
-    build: .
+    image: opheliachiu/spareroom-shopping-cart-kata:latest
     ports:
       - "5000:5000"  # Map port 5000 inside the container to 5001 on your host machine
     environment:
