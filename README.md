@@ -1,6 +1,6 @@
 # Shopping Cart Kata
 
-This is a simple Flask-based shopping cart system. 
+This is a simple Flask-based shopping cart system.  
 Python version: **3.12.4**
 
 ## Features
@@ -57,7 +57,6 @@ Python version: **3.12.4**
          "unit_price": 40
       }
    ]
-
    ```
    **Response**:  
    - Success: `200 OK` with a success message.
@@ -70,7 +69,7 @@ Python version: **3.12.4**
 
 4. **PATCH /api/pricing/<code>**  
    **Description**: Partially update a product's details by its code. Only the fields provided in the request body will be updated.  
-   **Request Body**: JSON object with fields to update (e.g., `unit_price`, `special_price`). 
+   **Request Body**: JSON object with fields to update (e.g., `unit_price`, `special_price`).  
    **Example**
    ```json
    {
@@ -92,7 +91,6 @@ Python version: **3.12.4**
       "B"
    ]
    ```
-
    **Response**:  
    - Success: `200 OK` with a list of deleted products.
    - Error: `404 Not Found` if none of the provided products exist.
@@ -124,39 +122,36 @@ Python version: **3.12.4**
 
 ## Running the Application
 
-### Virtual Environment Setup
+### Local Setup
 
-To set up a virtual environment in Python:
+If you are running the app locally, follow these steps:
 
-1. **Navigate to your project directory**:
+1. **Clone the repository**:
    ```bash
-   cd /path/to/your/project
+   git clone <repository-url>
+   cd spareroom-shopping-cart-kata
    ```
 
-2. **Create a virtual environment**:
+2. **Set up a virtual environment**:
+   Only required for local development (not necessary for Docker or Heroku deployments):
    ```bash
    python3 -m venv .venv
+   source .venv/bin/activate  # For Windows: .venv\Scripts\activate
    ```
 
-3. **Activate the virtual environment**:
-   - **macOS/Linux**:
-     ```bash
-     source .venv/bin/activate
-     ```
-   - **Windows**:
-     ```bash
-     .venv\Scripts\activate
-     ```
-After the virtual envirnment is set up:
-
-1. **Install dependencies**:
+3. **Install dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
-2. **Set up PostgreSQL**: Ensure that PostgreSQL is running on your system and set in .env or add the herouku postgresql uri in .env
+4. **Set up PostgreSQL**: Make sure PostgreSQL is running, and ensure the correct credentials are set in `.env` or environment variables.
 
-3. **Run the Flask application**:
+5. **Run database migrations**:
+   ```bash
+   flask db upgrade
+   ```
+
+6. **Run the Flask application**:
    - **Mac OS**:
      ```bash
      export FLASK_APP=app.py
@@ -166,46 +161,63 @@ After the virtual envirnment is set up:
      set FLASK_APP=app.py
      ```
 
-4. **Start the Flask app**:
+   Start the application:
    ```bash
    python app.py
    ```
-   or
+
+   This will run the app locally at `http://127.0.0.1:5000/`.
+
+7. **API Testing Example**:
+
+   To test the `/api/subtotal` endpoint locally:
+
    ```bash
-   flask run
+   curl -X POST http://localhost:5000/api/subtotal \
+   -H "Content-Type: application/json" \
+   -d '[{"code":"A","quantity":3},{"code":"B","quantity":3},{"code":"C","quantity":1},{"code":"D","quantity":2}]'
    ```
 
-   The app will start in development mode, and you can access the API at `http://127.0.0.1:5000/`.
+### Docker Setup
 
+Alternatively, you can run the app using Docker:
 
-
-4. **Install dependencies**:
+1. **Run the app using Docker Compose**:
    ```bash
-   pip install -r requirements.txt
+   docker-compose up --build
    ```
 
-5. **Deactivate the virtual environment** when you're done:
+2. **Database migration inside Docker**:
    ```bash
-   deactivate
+   docker-compose exec app flask db upgrade
    ```
 
-## Database Setup
+3. **Access the app** at `http://127.0.0.1:5000`.
 
-This app uses Flask-Migrate for database migrations. To initialize the database:
+4. **API Testing Example (within container)**:
 
-1. **Initialize the database**:
+   To test the `/api/subtotal` endpoint inside Docker:
+
    ```bash
-   flask db init
+   curl -X POST http://localhost:5000/api/subtotal \
+   -H "Content-Type: application/json" \
+   -d '[{"code":"A","quantity":3},{"code":"B","quantity":3},{"code":"C","quantity":1},{"code":"D","quantity":2}]'
    ```
 
-2. **Create a migration**:
-   ```bash
-   flask db migrate
-   ```
+### Heroku Deployment
 
-3. **Apply the migration**:
+The app is already deployed on Heroku:
+
+- **Heroku App URL**: [https://spareroom-shopping-cart-kata-bdd866b64262.herokuapp.com/](https://spareroom-shopping-cart-kata-bdd866b64262.herokuapp.com/)
+
+1. **API Testing Example on Heroku**:
+
+   To test the `/api/subtotal` endpoint on Heroku:
+
    ```bash
-   flask db upgrade
+   curl -X POST https://spareroom-shopping-cart-kata-bdd866b64262.herokuapp.com/api/subtotal \
+   -H "Content-Type: application/json" \
+   -d '[{"code":"A","quantity":3},{"code":"B","quantity":3},{"code":"C","quantity":1},{"code":"D","quantity":2}]'
    ```
 
 ## Run Unit Tests

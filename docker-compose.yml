@@ -4,7 +4,7 @@ services:
   app:
     build: .
     ports:
-      - "5001:5000"  # Map port 5000 inside the container to 5001 on your host machine
+      - "5000:5000"  # Map port 5000 inside the container to 5001 on your host machine
     environment:
       - FLASK_ENV=development
       - SQLALCHEMY_DATABASE_URI=postgresql://username:password@db:5432/dbname
@@ -20,4 +20,6 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: dbname
     ports:
-      - "5433:5432"
+      - "5432:5432"
+    volumes:
+      - "./docker/postgres/dump.sql:/docker-entrypoint-initdb.d/dump.sql"
