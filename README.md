@@ -186,11 +186,11 @@ Alternatively, you can run the app using Docker:
 
    To test the `/api/subtotal` endpoint inside Docker:
 
-   ```bash
-   curl -X POST http://localhost:5000/api/subtotal \
-   -H "Content-Type: application/json" \
-   -d '[{"code":"A","quantity":3},{"code":"B","quantity":3},{"code":"C","quantity":1},{"code":"D","quantity":2}]'
-   ```
+```bash
+curl -X POST http://localhost:5000/api/subtotal \
+-H "Content-Type: application/json" \
+-d '[{"code":"A","quantity":3},{"code":"B","quantity":3},{"code":"C","quantity":1},{"code":"D","quantity":2}]'
+```
 ### Heroku Deployment
 
 The app is already deployed on Heroku:
@@ -201,18 +201,18 @@ The app is already deployed on Heroku:
 
    To test the `/api/subtotal` endpoint on Heroku:
 
-   ```bash
-   curl -X POST https://spareroom-shopping-cart-kata-bdd866b64262.herokuapp.com/api/subtotal \
-   -H "Content-Type: application/json" \
-   -d '[{"code":"A","quantity":3},{"code":"B","quantity":3},{"code":"C","quantity":1},{"code":"D","quantity":2}]'
-   ```
+```bash
+curl -X POST https://spareroom-shopping-cart-kata-bdd866b64262.herokuapp.com/api/subtotal \
+-H "Content-Type: application/json" \
+-d '[{"code":"A","quantity":3},{"code":"B","quantity":3},{"code":"C","quantity":1},{"code":"D","quantity":2}]'
+```
 ## Run Unit Tests
 
 1. **Run unit tests**:
-   ```bash
-   python -m unittest discover -s tests
-   ```
+```bash
+python -m unittest discover -s tests
+```
 2. **Generate HTML report**:
-   ```bash
-   python tests/test_app.py
-   ```
+```bash
+python tests/test_app.py
+```
