@@ -131,26 +131,22 @@ If you are running the app locally, follow these steps:
    git clone <repository-url>
    cd spareroom-shopping-cart-kata
    ```
-
 2. **Set up a virtual environment**:
    Only required for local development (not necessary for Docker or Heroku deployments):
    ```bash
    python3 -m venv .venv
    source .venv/bin/activate  # For Windows: .venv\Scripts\activate
    ```
-
 3. **Install dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
-
 4. **Set up PostgreSQL**: Make sure PostgreSQL is running, and ensure the correct credentials are set in `.env` or environment variables.
 
 5. **Run database migrations**:
    ```bash
    flask db upgrade
    ```
-
 6. **Run the Flask application**:
    - **Mac OS**:
      ```bash
@@ -160,12 +156,10 @@ If you are running the app locally, follow these steps:
      ```bash
      set FLASK_APP=app.py
      ```
-
    Start the application:
    ```bash
    python app.py
    ```
-
    This will run the app locally at `http://127.0.0.1:5000/`.
 
 7. **API Testing Example**:
@@ -186,7 +180,6 @@ Alternatively, you can run the app using Docker:
    ```bash
    docker-compose up --build
    ```
-
 2. **Access the app** at `http://127.0.0.1:5000`.
 
 3. **API Testing Example (within container)**:
@@ -198,7 +191,6 @@ Alternatively, you can run the app using Docker:
    -H "Content-Type: application/json" \
    -d '[{"code":"A","quantity":3},{"code":"B","quantity":3},{"code":"C","quantity":1},{"code":"D","quantity":2}]'
    ```
-
 ### Heroku Deployment
 
 The app is already deployed on Heroku:
@@ -214,14 +206,12 @@ The app is already deployed on Heroku:
    -H "Content-Type: application/json" \
    -d '[{"code":"A","quantity":3},{"code":"B","quantity":3},{"code":"C","quantity":1},{"code":"D","quantity":2}]'
    ```
-
 ## Run Unit Tests
 
 1. **Run unit tests**:
    ```bash
    python -m unittest discover -s tests
    ```
-
 2. **Generate HTML report**:
    ```bash
    python tests/test_app.py
